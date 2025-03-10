@@ -9,7 +9,7 @@ function Landing() {
         <div className='flex items-center space-x-5 mb-2'>
           <Logo container='w-[100px] rounded-full overflow-hidden' />
           <h1 className='w-full text-xl lg:text-4xl font-extrabold text-[var(--primary)] '>
-            Tools! Tools!! Tools!!! Jattu
+            Tools! Tools!! Tools!!! PS
           </h1>
         </div>
         {/* SMALL SCREEN IMAGE */}

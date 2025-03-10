@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --primary: darkgoldenrod;
-  --hoverColor: goldenrod;
+  --primary: rgb(2, 2, 95);
+  --hoverColor: rgb(32, 144, 218);
   --bgColor: white;
   --textSecondary: darkslategray;
 }
