@@ -6,16 +6,21 @@ import SearchProductModal from "../components/modals/SearchProductModal"
 import Loading from "../components/Loading"
 import { useProductQuery } from "../queries/products"
 import { useCategoryQuery } from "../queries/categories"
+import Pagination from "../components/Pagination"
 
 function AllProducts() {
   const { currentUser } = useDashboardContext()
   const [showProductModal, setShowProductModal] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState("All Products")
   const [productCategory, setProductCategory] = useState("All Products")
+  const [limit] = useState(50)
+  const [page, setPage] = useState(1)
 
   const { data, isLoading, isError } = useProductQuery(
     selectedProduct,
-    productCategory
+    productCategory,
+    limit,
+    page
   )
 
   const { data: categories } = useCategoryQuery()
@@ -37,7 +42,10 @@ function AllProducts() {
 
         <select
           className='border-none rounded p-1 outline-0'
-          onChange={(e) => setProductCategory(e.target.value)}
+          onChange={(e) => {
+            setProductCategory(e.target.value)
+            setPage(1)
+          }}
         >
           {filterBtns.map((btn, index) => {
             return (
@@ -82,7 +90,10 @@ function AllProducts() {
               autoFocus
               placeholder='search product'
               value={selectedProduct}
-              onClick={() => setShowProductModal(true)}
+              onClick={() => {
+                setShowProductModal(true)
+                setPage(1)
+              }}
               readOnly
             />
 
@@ -96,7 +107,8 @@ function AllProducts() {
             <h1 className='mt-5 text-xs md:text-sm lg:text-base'>
               Count:{" "}
               {new Intl.NumberFormat().format(
-                Number(data && data?.products.length)
+                // Number(data && data?.products.length)
+                Number(data && data?.count)
               )}{" "}
               product
               {data && data?.products?.length !== 1 ? "s" : ""}
@@ -132,6 +144,11 @@ function AllProducts() {
             }
           </section>
         </>
+      )}
+
+      {/* PAGINATION */}
+      {data && data?.numOfPages > 1 && (
+        <Pagination page={page} data={data} setPage={setPage} />
       )}
     </main>
   )

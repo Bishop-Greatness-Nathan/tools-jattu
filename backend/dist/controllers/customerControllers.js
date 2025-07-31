@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteCustomer = exports.updateCustomer = exports.getSingleCustomer = exports.getAllCustomers = exports.filterCustomers = exports.createCustomer = void 0;
+exports.resetPointsUsage = exports.deleteCustomer = exports.updateCustomer = exports.getSingleCustomer = exports.getAllCustomers = exports.filterCustomers = exports.createCustomer = void 0;
 const customErrors_1 = require("../errors/customErrors");
 const http_status_codes_1 = require("http-status-codes");
 const customerModel_1 = __importDefault(require("../models/customerModel"));
@@ -27,24 +27,63 @@ const createCustomer = (req, res) => __awaiter(void 0, void 0, void 0, function*
     res.status(http_status_codes_1.StatusCodes.CREATED).json({ msg: "customer account created" });
 });
 exports.createCustomer = createCustomer;
+// export const filterCustomers = async (
+//   req: AuthenticatedRequest,
+//   res: Response
+// ) => {
+//   const { customerId, debtors, page } = req.query
+//   const pageLimit = 5
+//   const pageNumber = Number(page || 1)
+//   const skip = (pageNumber - 1) * pageLimit
+//   if (customerId === "all" && debtors === "false") {
+//     const customers = await Customer.find({})
+//       .sort({ firstName: 1 })
+//       .skip(skip)
+//       .limit(pageLimit)
+//     res.status(StatusCodes.OK).json({ count: customers.length, customers })
+//     return
+//   } else if (customerId === "all" && debtors === "true") {
+//     const customers = await Customer.find({ debt: { $gt: 0 } })
+//       .sort({
+//         firstName: 1,
+//       })
+//       .skip(skip)
+//       .limit(pageLimit)
+//     res.status(StatusCodes.OK).json({ count: customers.length, customers })
+//     return
+//   } else {
+//     const customers = await Customer.find({ _id: customerId })
+//       .skip(skip)
+//       .limit(pageLimit)
+//     res.status(StatusCodes.OK).json({ count: customers.length, customers })
+//     return
+//   }
+// }
 const filterCustomers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { customerId, debtors } = req.query;
-    if (customerId === "all" && debtors === "false") {
-        const customers = yield customerModel_1.default.find({}).sort({ firstName: 1 });
-        res.status(http_status_codes_1.StatusCodes.OK).json({ count: customers.length, customers });
-        return;
+    try {
+        const { customerId = "all", debtors = "false", page = "1", limit = "5", } = req.query;
+        const pageLimit = Number(limit || 5);
+        const pageNumber = Number(page) || 1;
+        const skip = (pageNumber - 1) * pageLimit;
+        let query = {};
+        if (customerId !== "all") {
+            query._id = customerId;
+        }
+        if (debtors === "true") {
+            query.debt = { $gt: 0 };
+        }
+        const count = yield customerModel_1.default.countDocuments(query);
+        const numOfPages = Math.ceil(count / pageLimit);
+        const customers = yield customerModel_1.default.find(query)
+            .sort({ firstName: 1 })
+            .skip(skip)
+            .limit(pageLimit);
+        res.status(http_status_codes_1.StatusCodes.OK).json({ count, customers, numOfPages });
     }
-    else if (customerId === "all" && debtors === "true") {
-        const customers = yield customerModel_1.default.find({ debt: { $gt: 0 } }).sort({
-            firstName: 1,
-        });
-        res.status(http_status_codes_1.StatusCodes.OK).json({ count: customers.length, customers });
-        return;
-    }
-    else {
-        const customers = yield customerModel_1.default.find({ _id: customerId });
-        res.status(http_status_codes_1.StatusCodes.OK).json({ count: customers.length, customers });
-        return;
+    catch (error) {
+        res
+            .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
+            .json({ message: "Something went wrong", error });
     }
 });
 exports.filterCustomers = filterCustomers;
@@ -79,4 +118,11 @@ const deleteCustomer = (req, res) => __awaiter(void 0, void 0, void 0, function*
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "customer deleted" });
 });
 exports.deleteCustomer = deleteCustomer;
+const resetPointsUsage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    //  const exp = new Date(Date.now())
+    //  console.log(exp.getDate())
+    yield customerModel_1.default.updateMany({ pointsUsage: { $gt: 0 } }, { pointsUsage: 0 });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "points usage reset successful" });
+});
+exports.resetPointsUsage = resetPointsUsage;
 //# sourceMappingURL=customerControllers.js.map

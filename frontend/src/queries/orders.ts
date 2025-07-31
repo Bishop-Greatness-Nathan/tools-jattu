@@ -12,14 +12,18 @@ export const useOrders = ({
   from,
   to,
   userId,
+  page,
+  limit,
 }: {
   from: string
   to: string
   userId: string
+  page: number
+  limit: number
 }) => {
   return useQuery({
-    queryKey: ["orders", from, to, userId],
-    queryFn: () => fetchOrders({ from, to, userId }),
+    queryKey: ["orders", from, to, userId, page, limit],
+    queryFn: () => fetchOrders({ from, to, userId, page, limit }),
   })
 }
 
@@ -67,6 +71,7 @@ export const useReturnItem = () => {
       queryClient.invalidateQueries({ queryKey: ["products"] })
       queryClient.invalidateQueries({ queryKey: ["orders"] })
       queryClient.invalidateQueries({ queryKey: ["stock"] })
+      queryClient.invalidateQueries({ queryKey: ["customers"] })
     },
   })
 }

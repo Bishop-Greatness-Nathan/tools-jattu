@@ -11,14 +11,16 @@ export const fetchCustomers = async () => {
 // FETCH FILTERED CUSTOMERS
 export const fetchFilteredCustomers = async (
   customerId: string,
-  debtors: boolean
+  debtors: boolean,
+  page: number,
+  limit: number
 ) => {
   const {
-    data: { customers },
+    data: { customers, count, numOfPages },
   } = await customFetch.get(
-    `/customer/filter?customerId=${customerId}&debtors=${debtors}`
+    `/customer/filter?customerId=${customerId}&debtors=${debtors}&page=${page}&limit=${limit}`
   )
-  return customers
+  return { customers, count, numOfPages }
 }
 
 // CREATE CUSTOMER
@@ -45,4 +47,9 @@ export const editCustomer = async ({
   data: Record<string, FormDataEntryValue>
 }) => {
   return await customFetch.patch(`/customer/${id}`, data)
+}
+
+// RESET POINTS USAGE
+export const resetPointsUsage = async () => {
+  return await customFetch.get("/customer/reset")
 }

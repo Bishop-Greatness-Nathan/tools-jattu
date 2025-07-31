@@ -8,6 +8,8 @@ import OrderFooter from "./OrderFooter"
 
 function SingleOrder({
   _id,
+  cash,
+  bank,
   total,
   orderItems,
   customer,
@@ -66,6 +68,8 @@ function SingleOrder({
 
         <OrderFooter
           soldBy={soldBy}
+          cash={cash || 0}
+          bank={bank || 0}
           total={total}
           balance={balance as number}
           _id={_id}

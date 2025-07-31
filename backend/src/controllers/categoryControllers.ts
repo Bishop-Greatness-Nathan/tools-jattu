@@ -7,6 +7,7 @@ import {
 import { AuthenticatedRequest } from "../middleware/authMiddleware"
 import Category from "../models/categoryModel"
 import { StatusCodes } from "http-status-codes"
+import { writeFile } from "fs"
 
 // CREATE CATEGORY
 export const createCategory = async (

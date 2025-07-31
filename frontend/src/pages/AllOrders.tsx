@@ -10,6 +10,7 @@ import ReturnItemModal from "../components/modals/ReturnItemModal"
 import Filter from "../components/Filter"
 import { useOrders } from "../queries/orders"
 import { useUsers } from "../queries/users"
+import Pagination from "../components/Pagination"
 
 function AllOrders() {
   const { currentUser, showReturnItemModal } = useDashboardContext()
@@ -21,6 +22,8 @@ function AllOrders() {
     to: dayjs(new Date(Date.now())).format("YYYY-MM-DD"),
   })
   const [userId, setUserId] = useState("all")
+  const [page, setPage] = useState(1)
+  const [limit] = useState(10)
 
   const [filterBtns, setFilterBtns] = useState<string[]>([])
   const [users, setUsers] = useState<UserTypes[]>([])
@@ -29,6 +32,8 @@ function AllOrders() {
     from: queryDate.from,
     to: queryDate.to,
     userId: userId,
+    page,
+    limit,
   })
 
   const { data: allUsers } = useUsers()
@@ -36,7 +41,7 @@ function AllOrders() {
   // FILTER ORDERS
   const searchOrders = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-
+    setPage(1)
     const from = new FormData(e.currentTarget).get("from")
     const to = new FormData(e.currentTarget).get("to")
 
@@ -69,6 +74,7 @@ function AllOrders() {
   // FILTER ORDERS
   const filterFunction = (e: ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value
+    setPage(1)
     if (value === "All" && currentUser.role === "admin") {
       setUserId("all")
     } else {
@@ -120,13 +126,13 @@ function AllOrders() {
             <h1 className='mt-5 text-xs md:text-sm lg:text-base'>
               Showing{" "}
               <span className='text-blue-800 font-semibold'>
-                {data?.orders.length} Result{data?.orders.length > 1 && "s"}
+                {data?.count} Result{data?.count > 1 && "s"}
               </span>{" "}
               for <span className='text-blue-800 font-semibold'>{date}</span>
             </h1>
 
             {/* HEADER */}
-            {data?.orders.length < 1 ? (
+            {data?.count < 1 ? (
               <h1 className='text-center font-bold'>No orders available</h1>
             ) : (
               <>
@@ -140,6 +146,11 @@ function AllOrders() {
           </>
         )}
       </section>
+
+      {/* PAGINATION */}
+      {data && data?.numOfPages > 1 && (
+        <Pagination page={page} data={data} setPage={setPage} />
+      )}
       {showReturnItemModal && <ReturnItemModal />}
     </main>
   )
