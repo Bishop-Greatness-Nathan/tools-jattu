@@ -30,18 +30,23 @@ const ProductSchema = new mongoose_1.default.Schema({
         type: Number,
         required: true,
     },
+    soldIn: {
+        type: String,
+        enum: ['full', 'half', 'quarter'],
+        default: 'full',
+    },
     image: {
         type: String,
-        default: "",
+        default: '',
     },
     maximumQty: Number,
     minimumQty: Number,
     category: String,
     userId: {
         type: mongoose_1.default.Schema.ObjectId,
-        ref: "User",
+        ref: 'User',
         required: true,
     },
 });
-exports.default = mongoose_1.default.model("Product", ProductSchema);
+exports.default = mongoose_1.default.model('Product', ProductSchema);
 //# sourceMappingURL=productModel.js.map

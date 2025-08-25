@@ -1,30 +1,30 @@
-import { useState, MouseEvent, ChangeEvent, useEffect } from "react"
-import { useCreateOrderContext } from "../../pages/CreateOrder"
-import { FaTimes } from "react-icons/fa"
-import { useProductQuery } from "../../queries/products"
-import { toast } from "react-toastify"
+import { useState, MouseEvent, ChangeEvent, useEffect } from 'react';
+import { useCreateOrderContext } from '../../pages/CreateOrder';
+import { FaTimes } from 'react-icons/fa';
+import { useProductQuery } from '../../queries/products';
+import { toast } from 'react-toastify';
 
 function OrderProductModal() {
   const { setShowProductModal, orderItems, setOrderItems } =
-    useCreateOrderContext()
-  const [productNames, setProductNames] = useState<string[]>([])
-  const [displayedProducts, setDisplayedProducts] = useState<string[]>([])
+    useCreateOrderContext();
+  const [productNames, setProductNames] = useState<string[]>([]);
+  const [displayedProducts, setDisplayedProducts] = useState<string[]>([]);
 
   const { data, isLoading, isError, error } = useProductQuery(
-    "All Products",
-    "All Products",
+    'All Products',
+    'All Products',
     Infinity,
     1
-  )
+  );
 
   function selectName(e: MouseEvent<HTMLElement>) {
-    const value = e.currentTarget.textContent
-    const orderItem = data?.products.find((product) => product.name === value)
-    if (!orderItem) throw new Error("product does not exist")
-    const alreadySelected = orderItems.find((item) => item.name === value)
+    const value = e.currentTarget.textContent;
+    const orderItem = data?.products.find((product) => product.name === value);
+    if (!orderItem) throw new Error('product does not exist');
+    const alreadySelected = orderItems.find((item) => item.name === value);
     if (alreadySelected) {
-      toast.error("Item already selected")
-      return
+      toast.error('Item already selected');
+      return;
     }
     setOrderItems([
       ...orderItems,
@@ -37,33 +37,34 @@ function OrderProductModal() {
         returned: 0,
         diff: 0,
         productId: orderItem._id,
+        soldIn: orderItem.soldIn || 'full',
       },
-    ])
-    setShowProductModal(false)
+    ]);
+    setShowProductModal(false);
   }
 
   function filterList(e: ChangeEvent<HTMLInputElement>) {
-    const input = e.target.value
-    const inputValue = input.toLowerCase()
+    const input = e.target.value;
+    const inputValue = input.toLowerCase();
     const filteredValue = productNames.filter((product) => {
-      if (inputValue === "") {
-        return product
+      if (inputValue === '') {
+        return product;
       } else if (product.toLowerCase().includes(inputValue)) {
-        return product
+        return product;
       }
-    })
-    setDisplayedProducts(filteredValue)
+    });
+    setDisplayedProducts(filteredValue);
   }
 
   useEffect(() => {
     if (data) {
-      const productNames = data?.products.map((product) => product.name).sort()
-      setDisplayedProducts(productNames)
-      setProductNames(productNames)
+      const productNames = data?.products.map((product) => product.name).sort();
+      setDisplayedProducts(productNames);
+      setProductNames(productNames);
     }
-  }, [data])
+  }, [data]);
 
-  if (isError) return <h1 className='bg-white text-center'>{error.message}</h1>
+  if (isError) return <h1 className='bg-white text-center'>{error.message}</h1>;
   return (
     <main className='blured-bg fixed top-0 left-0 flex justify-center items-center w-full h-full z-10'>
       <div className='w-[80%] md:w-[60%] h-[80%] bg-white rounded-md p-5 relative'>
@@ -87,7 +88,7 @@ function OrderProductModal() {
                 >
                   {product}
                 </p>
-              )
+              );
             })}
           </div>
         )}
@@ -99,7 +100,7 @@ function OrderProductModal() {
         </button>
       </div>
     </main>
-  )
+  );
 }
 
-export default OrderProductModal
+export default OrderProductModal;

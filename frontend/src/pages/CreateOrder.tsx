@@ -4,240 +4,252 @@ import {
   createContext,
   useState,
   useEffect,
-} from "react"
-import OrderProductModal from "../components/modals/OrderProductModal"
-import { toast } from "react-toastify"
-import axios from "axios"
-import { useDashboardContext } from "./DashboardLayout"
-import { OrderItemsType, CustomerType } from "../utils/types"
-import OrderItems from "../components/OrderItems"
-import EditOrderPrice from "../components/EditOrderPrice"
-import TransactionDetails from "../components/TransactionDetails"
-import CreateCustomerModal from "../components/modals/CreateCustomerModal"
-import SearchCustomerModal from "../components/modals/SearchCustomerModal"
-import { useCustomers } from "../queries/customers"
-import { useCreateOrder } from "../queries/orders"
+} from 'react';
+import OrderProductModal from '../components/modals/OrderProductModal';
+import { toast } from 'react-toastify';
+import axios from 'axios';
+import { useDashboardContext } from './DashboardLayout';
+import { OrderItemsType, CustomerType } from '../utils/types';
+import OrderItems from '../components/OrderItems';
+import EditOrderPrice from '../components/EditOrderPrice';
+import TransactionDetails from '../components/TransactionDetails';
+import CreateCustomerModal from '../components/modals/CreateCustomerModal';
+import SearchCustomerModal from '../components/modals/SearchCustomerModal';
+import { useCustomers } from '../queries/customers';
+import { useCreateOrder } from '../queries/orders';
 
 type ValueTypes = {
-  total: number
-  cash: number
-  bank: number
-  transaction: string
-  balance: number
-  setCash: React.Dispatch<React.SetStateAction<number>>
-  setBank: React.Dispatch<React.SetStateAction<number>>
-  orderItems: OrderItemsType[]
-  setOrderItems: React.Dispatch<React.SetStateAction<OrderItemsType[]>>
-  increment: (id: string) => void
-  decrement: (id: string) => void
-  deleteItem: (id: string) => void
-  openEditOrderPrice: (id: string) => void
-  closeEditOrderPrice: () => void
-  submitEditPriceForm: (e: FormEvent<HTMLFormElement>) => void
-  setCustomer: React.Dispatch<React.SetStateAction<CustomerType>>
-  customers: CustomerType[]
-  customer: CustomerType
-  setTransaction: React.Dispatch<React.SetStateAction<string>>
-  showProductModal: boolean
-  setShowProductModal: React.Dispatch<React.SetStateAction<boolean>>
-  setShowSearchCustomerModal: React.Dispatch<React.SetStateAction<boolean>>
-}
+  total: number;
+  cash: number;
+  bank: number;
+  transaction: string;
+  balance: number;
+  setCash: React.Dispatch<React.SetStateAction<number>>;
+  setBank: React.Dispatch<React.SetStateAction<number>>;
+  orderItems: OrderItemsType[];
+  setOrderItems: React.Dispatch<React.SetStateAction<OrderItemsType[]>>;
+  increment: (id: string) => void;
+  decrement: (id: string) => void;
+  deleteItem: (id: string) => void;
+  openEditOrderPrice: (id: string) => void;
+  closeEditOrderPrice: () => void;
+  submitEditPriceForm: (e: FormEvent<HTMLFormElement>) => void;
+  setCustomer: React.Dispatch<React.SetStateAction<CustomerType>>;
+  customers: CustomerType[];
+  customer: CustomerType;
+  setTransaction: React.Dispatch<React.SetStateAction<string>>;
+  showProductModal: boolean;
+  setShowProductModal: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowSearchCustomerModal: React.Dispatch<React.SetStateAction<boolean>>;
+};
 
-const CreateOrderContext = createContext<ValueTypes | undefined>(undefined)
+const CreateOrderContext = createContext<ValueTypes | undefined>(undefined);
 
 function getLocalStorage() {
-  let orderItems: OrderItemsType[]
-  if (localStorage.getItem("orderItems") === null) {
-    orderItems = []
+  let orderItems: OrderItemsType[];
+  if (localStorage.getItem('orderItems') === null) {
+    orderItems = [];
   } else {
-    orderItems = JSON.parse(localStorage.getItem("orderItems") as string)
+    orderItems = JSON.parse(localStorage.getItem('orderItems') as string);
   }
-  return orderItems
+  return orderItems;
 }
 
 function CreateOrder() {
-  const { showCreateCustomerModal, createEndOfDay } = useDashboardContext()
+  const { showCreateCustomerModal, createEndOfDay } = useDashboardContext();
   const [orderItems, setOrderItems] = useState<OrderItemsType[]>(
     getLocalStorage()
-  )
-  const [showEditPrice, setShowEditPrice] = useState(false)
-  const [editID, setEditID] = useState("")
-  const [total, setTotal] = useState(0)
-  const [transaction, setTransaction] = useState("cash")
-  const [cash, setCash] = useState(0)
-  const [bank, setBank] = useState(0)
-  const [balance, setBalance] = useState(0)
+  );
+  const [showEditPrice, setShowEditPrice] = useState(false);
+  const [editID, setEditID] = useState('');
+  const [total, setTotal] = useState(0);
+  const [transaction, setTransaction] = useState('cash');
+  const [cash, setCash] = useState(0);
+  const [bank, setBank] = useState(0);
+  const [balance, setBalance] = useState(0);
   const [customer, setCustomer] = useState<CustomerType>({
-    firstName: "",
-    lastName: "",
-    phoneNumber: "",
-    role: "",
-    _id: "",
-  })
+    firstName: '',
+    lastName: '',
+    phoneNumber: '',
+    role: '',
+    _id: '',
+  });
 
-  const [showProductModal, setShowProductModal] = useState(false)
-  const [showSearchCustomerModal, setShowSearchCustomerModal] = useState(false)
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [showSearchCustomerModal, setShowSearchCustomerModal] = useState(false);
 
-  const { data: customers } = useCustomers()
+  const { data: customers } = useCustomers();
 
-  const { mutate, isPending, isError, error, isSuccess } = useCreateOrder()
+  const { mutate, isPending, isError, error, isSuccess } = useCreateOrder();
 
   // INCREASE QUANTITY
   const increment = (id: string) => {
     const products = orderItems.map((item: OrderItemsType) => {
-      // for items sold in half
-      if (item.productId === id && item.name === "polyplus") {
-        item.pcs += 0.5
-        item.subTotal = item.pcs * item.price
+      if (item.productId === id) {
+        // if soldIn property does not exist because of this new change
+        if (!item.soldIn || item.soldIn === 'full') {
+          item.pcs += 1;
+          item.subTotal = item.pcs * item.price;
+        }
+
+        if (item.soldIn === 'half') {
+          item.pcs += 0.5;
+          item.subTotal = item.pcs * item.price;
+        }
+
+        if (item.soldIn === 'quarter') {
+          item.pcs += 0.25;
+          item.subTotal = item.pcs * item.price;
+        }
       }
-      if (item.productId === id && item.name !== "polyplus") {
-        item.pcs += 1
-        item.subTotal = item.pcs * item.price
-      }
-      return item
-    })
-    setOrderItems(products)
-  }
+
+      return item;
+    });
+    setOrderItems(products);
+  };
 
   // DECREASE QUANTITY
   const decrement = (id: string) => {
     const products = orderItems.map((item: OrderItemsType) => {
-      // for items sold in half
-      if (
-        item.productId === id &&
-        item.name === "polyplus" &&
-        item.pcs !== 0.5
-      ) {
-        item.pcs -= 0.5
-        item.subTotal = item.pcs * item.price
+      if (item.productId === id) {
+        // if soldIn property does not exist because of this new change
+        if ((!item.soldIn || item.soldIn === 'full') && item.pcs !== 1) {
+          item.pcs -= 1;
+          item.subTotal = item.pcs * item.price;
+        }
+
+        if (item.soldIn === 'half' && item.pcs !== 0.5) {
+          item.pcs -= 0.5;
+          item.subTotal = item.pcs * item.price;
+        }
+
+        if (item.soldIn === 'quarter' && item.pcs !== 0.25) {
+          item.pcs -= 0.25;
+          item.subTotal = item.pcs * item.price;
+        }
       }
 
-      // for items sold in whole
-      if (item.productId === id && item.name !== "polyplus" && item.pcs !== 1) {
-        item.pcs -= 1
-        item.subTotal = item.pcs * item.price
-      }
-      return item
-    })
-    setOrderItems(products)
-  }
+      return item;
+    });
+    setOrderItems(products);
+  };
 
   // DELETE ORDER ITEM
   const deleteItem = (id: string) => {
     const products = orderItems.filter(
       (item: OrderItemsType) => item.productId !== id
-    )
-    setOrderItems(products)
-  }
+    );
+    setOrderItems(products);
+  };
 
   const openEditOrderPrice = (id: string) => {
-    setEditID(id)
-    setShowEditPrice(true)
-  }
+    setEditID(id);
+    setShowEditPrice(true);
+  };
 
   const closeEditOrderPrice = () => {
-    setShowEditPrice(false)
-  }
+    setShowEditPrice(false);
+  };
 
   // SUBMIT EDIT PRICE FORM
   const submitEditPriceForm = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const price = Number(new FormData(e.currentTarget).get("price"))
+    e.preventDefault();
+    const price = Number(new FormData(e.currentTarget).get('price'));
 
     const products = orderItems.map((item: OrderItemsType) => {
       if (item.productId === editID) {
-        item.price = price
-        item.subTotal = item.pcs * item.price
+        item.price = price;
+        item.subTotal = item.pcs * item.price;
       }
-      return item
-    })
-    setOrderItems(products)
-    setEditID("")
-    setShowEditPrice(false)
-  }
+      return item;
+    });
+    setOrderItems(products);
+    setEditID('');
+    setShowEditPrice(false);
+  };
 
   //  Get Total
   const getTotal = () => {
     const orderTotal = orderItems.reduce(
       (total: number, item: OrderItemsType) => {
-        total += item.subTotal
-        return total
+        total += item.subTotal;
+        return total;
       },
       0
-    )
-    setTotal(orderTotal)
+    );
+    setTotal(orderTotal);
 
     // calculate the diff for items
     orderItems.forEach((item) => {
-      item.diff = item.subTotal - item.cost * item.pcs
-    })
-  }
+      item.diff = item.subTotal - item.cost * item.pcs;
+    });
+  };
 
   // clear cart
   const clearCart = () => {
-    setOrderItems([])
-    localStorage.removeItem("orderItem")
-  }
+    setOrderItems([]);
+    localStorage.removeItem('orderItem');
+  };
 
   // calculate balance
   const getBalance = () => {
-    if (transaction === "cash") {
-      setBalance(0)
+    if (transaction === 'cash') {
+      setBalance(0);
     } else {
-      setBalance(total - (cash + bank))
+      setBalance(total - (cash + bank));
     }
-  }
+  };
 
   // SUBMIT ORDER
   const submitOrder = async () => {
-    if (transaction === "cash" && cash + bank !== total) {
-      toast.error("Invalid calculation")
-      return
+    if (transaction === 'cash' && cash + bank !== total) {
+      toast.error('Invalid calculation');
+      return;
     }
 
-    if (transaction === "credit" && cash + bank >= total) {
-      toast.error("Invalid calculation")
-      return
+    if (transaction === 'credit' && cash + bank >= total) {
+      toast.error('Invalid calculation');
+      return;
     }
 
-    if (transaction === "credit" && customer.firstName === "") {
-      toast.error("please enter customer for credit transaction")
-      return
+    if (transaction === 'credit' && customer.firstName === '') {
+      toast.error('please enter customer for credit transaction');
+      return;
     }
 
-    const data = { items: orderItems, total, cash, bank, balance, customer }
-    mutate(data)
-  }
+    const data = { items: orderItems, total, cash, bank, balance, customer };
+    mutate(data);
+  };
 
   // responses
   useEffect(() => {
     if (isSuccess) {
-      toast.success("Order created")
-      setOrderItems([])
-      localStorage.removeItem("orderItems")
-      location.reload()
+      toast.success('Order created');
+      setOrderItems([]);
+      localStorage.removeItem('orderItems');
+      location.reload();
     } else if (isError) {
       if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.msg)
+        toast.error(error.response?.data?.msg);
       }
     }
-  }, [isError, isSuccess])
+  }, [isError, isSuccess]);
 
   useEffect(() => {
-    getTotal()
-  }, [orderItems])
+    getTotal();
+  }, [orderItems]);
 
   useEffect(() => {
-    getBalance()
-  }, [transaction, cash, bank, total])
+    getBalance();
+  }, [transaction, cash, bank, total]);
 
   useEffect(() => {
-    localStorage.setItem("orderItems", JSON.stringify(orderItems))
-  }, [orderItems])
+    localStorage.setItem('orderItems', JSON.stringify(orderItems));
+  }, [orderItems]);
 
   useEffect(() => {
-    createEndOfDay()
-  }, [])
+    createEndOfDay();
+  }, []);
 
   const values = {
     orderItems,
@@ -262,7 +274,7 @@ function CreateOrder() {
     showProductModal,
     setShowProductModal,
     setShowSearchCustomerModal,
-  }
+  };
   return (
     <CreateOrderContext.Provider value={values}>
       <main className='py-5'>
@@ -306,7 +318,7 @@ function CreateOrder() {
         {/* TABLE FOOTER */}
         <div
           className={`${
-            orderItems.length < 1 && "hidden"
+            orderItems.length < 1 && 'hidden'
           } grid grid-cols-3 gap-2 mt-5 border border-[whitesmoke] border-t-slate-600 pt-5`}
         >
           <TransactionDetails />
@@ -315,7 +327,7 @@ function CreateOrder() {
         {/* CLEAR CART & SUBMIT BTNS */}
         <div
           className={`${
-            orderItems.length < 1 && "hidden"
+            orderItems.length < 1 && 'hidden'
           } flex justify-between mt-3 `}
         >
           {/* clear cart btn */}
@@ -329,27 +341,27 @@ function CreateOrder() {
           {/* Submit btn */}
           <button
             className={`bg-green-700 py-2 px-5 rounded text-white hover:bg-green-900 ease-in-out duration-300 text-xs md:text-base ${
-              isPending && "cursor-wait"
+              isPending && 'cursor-wait'
             }`}
             onClick={submitOrder}
             disabled={isPending}
           >
-            {isPending ? "Submitting..." : "Confirm Order"}
+            {isPending ? 'Submitting...' : 'Confirm Order'}
           </button>
         </div>
         {showEditPrice && <EditOrderPrice />}
       </main>
     </CreateOrderContext.Provider>
-  )
+  );
 }
 
 export const useCreateOrderContext = () => {
-  const context = useContext(CreateOrderContext)
+  const context = useContext(CreateOrderContext);
   if (context === undefined)
     throw new Error(
-      "useCreateOrderContext must be used within Create Order Context Provider"
-    )
-  return context
-}
+      'useCreateOrderContext must be used within Create Order Context Provider'
+    );
+  return context;
+};
 
-export default CreateOrder
+export default CreateOrder;

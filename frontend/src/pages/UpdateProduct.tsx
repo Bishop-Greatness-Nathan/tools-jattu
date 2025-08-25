@@ -1,75 +1,76 @@
-import { FormEvent, useState, useEffect } from "react"
-import { toast } from "react-toastify"
-import { useNavigate, useParams } from "react-router-dom"
-import { isAxiosError } from "axios"
-import FormSelect from "../components/FormSelect"
-import { useUpdateProduct, useGetSingleProduct } from "../queries/products"
-import { useCategoryQuery } from "../queries/categories"
-import Loading from "../components/Loading"
-import { useDashboardContext } from "./DashboardLayout"
+import { FormEvent, useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import { useNavigate, useParams } from 'react-router-dom';
+import { isAxiosError } from 'axios';
+import FormSelect from '../components/FormSelect';
+import { useUpdateProduct, useGetSingleProduct } from '../queries/products';
+import { useCategoryQuery } from '../queries/categories';
+import Loading from '../components/Loading';
+import { useDashboardContext } from './DashboardLayout';
+import { soldIn } from '../utils/defaults';
 
 function UpdateProduct() {
-  const { createEndOfDay } = useDashboardContext()
-  const [add, setAdd] = useState(0)
-  const [newQty, setNewQty] = useState(0)
+  const { createEndOfDay } = useDashboardContext();
+  const [add, setAdd] = useState(0);
+  const [newQty, setNewQty] = useState(0);
 
-  const navigate = useNavigate()
-  const { id } = useParams()
+  const navigate = useNavigate();
+  const { id } = useParams();
 
   const {
     data: categories,
     isLoading: categoryLoading,
     isError: isCategoryError,
-  } = useCategoryQuery()
+  } = useCategoryQuery();
 
-  const { mutate, isError, isPending, isSuccess, error } = useUpdateProduct()
+  const { mutate, isError, isPending, isSuccess, error } = useUpdateProduct();
 
   const {
     data: product,
     isLoading,
     isError: productError,
-  } = useGetSingleProduct(id as string)
+  } = useGetSingleProduct(id as string);
 
-  const newCategories = categories?.map((category) => category.name)
+  const newCategories = categories?.map((category) => category.name);
 
   function getNewQty() {
-    const newQty = Number(product?.qty) + Number(add)
-    setNewQty(newQty)
+    const newQty = Number(product?.qty) + Number(add);
+    setNewQty(newQty);
   }
 
   // submit form
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    const data = Object.fromEntries(formData)
-    mutate({ id, data })
-  }
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData);
+    mutate({ id, data });
+  };
 
   // responses
   const responses = () => {
     if (isError) {
       if (isAxiosError(error)) {
-        toast.error(error?.response?.data?.msg)
+        toast.error(error?.response?.data?.msg);
       }
     }
     if (isSuccess) {
-      toast.success("Product details updated")
-      createEndOfDay()
-      navigate("/dashboard/products")
+      toast.success('Product details updated');
+      createEndOfDay();
+      navigate('/dashboard/products');
     }
-  }
+  };
 
   useEffect(() => {
-    responses()
-  }, [isError, isSuccess])
+    responses();
+  }, [isError, isSuccess]);
 
   useEffect(() => {
-    getNewQty()
-  }, [product, add])
+    getNewQty();
+  }, [product, add]);
 
-  if (isLoading || categoryLoading) return <Loading />
+  if (isLoading || categoryLoading) return <Loading />;
 
-  if (productError || isCategoryError) return <h1>There was an error...</h1>
+  if (productError || isCategoryError) return <h1>There was an error...</h1>;
 
   return (
     <main className='py-5'>
@@ -171,12 +172,19 @@ function UpdateProduct() {
             list={newCategories || []}
             extraStyle='mt-2'
           />
+          <FormSelect
+            name='soldIn'
+            labelText='sold in'
+            defaultValue={product.soldIn || 'full'}
+            list={soldIn || []}
+            extraStyle='mt-2'
+          />
 
           <button
             type='submit'
             disabled={isPending}
             className={`bg-[var(--primary)] p-2 rounded text-white hover:bg-[var(--hoverColor)] ease-in-out duration-300 self-end ${
-              isPending && "cursor-wait"
+              isPending && 'cursor-wait'
             }`}
           >
             Edit Product
@@ -184,7 +192,7 @@ function UpdateProduct() {
         </form>
       </section>
     </main>
-  )
+  );
 }
 
-export default UpdateProduct
+export default UpdateProduct;
